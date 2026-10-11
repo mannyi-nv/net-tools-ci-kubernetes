@@ -6,7 +6,7 @@ pipeline {
         IMG_TAG = "${BUILD_NUMBER}"
         R_IMAGE_FULL_NAME = "${R_IMG_NAME}:v0.${IMG_TAG}"
         U_IMAGE_FULL_NAME = "${U_IMG_NAME}:v0.${IMG_TAG}"
-        ITAY_DOCKERHUB_PASS = "dckr_pat_kTSQXKzjM4r2WshQv6Rp95EwFtM"
+        ITAY_DOCKERHUB_PASS = "dckr_pat_kTSQXKzjM4r2WshQv6Rp95EwFtM" // Note: It is safer to store tokens in credentials instead of hardcoding
         ITAY_DOCKERHUB_USER = "itaylevops"
     }
     stages {
@@ -36,31 +36,30 @@ pipeline {
                                 '''
                             }
                         }
-
                         stage('Build') {
                             steps {
-                                withCredentials([usernamePassword
-                                                (credentialsId: 'net-tools-ci-dev-3',
-                                                passwordVariable: 'ITAY_DOCKERHUB_PASS',
-                                                usernameVariable: 'ITAY_DOCKERHUB_USER')]) {
-                                        sh """ echo $ITAY_DOCKERHUB_PASS | docker login -u $ITAY_DOCKERHUB_USER --password-stdin """
-                                        echo "======= Pulling docker image ========" 
-                                        sh "docker build -t ${R_IMAGE_FULL_NAME} ./rocky"
-                                        sh "docker run --rm \
-                                            -e BUILD_NUMBER=\"$BUILD_NUMBER\" \
-                                            -v /mnt/artifacts:/artifacts \
-                                            ${R_IMAGE_FULL_NAME}"
+                                withCredentials([usernamePassword(
+                                    credentialsId: 'net-tools-ci-dev-3',
+                                    passwordVariable: 'ITAY_DOCKERHUB_PASS',
+                                    usernameVariable: 'ITAY_DOCKERHUB_USER'
+                                )]) {
+                                    sh """ echo $ITAY_DOCKERHUB_PASS | docker login -u $ITAY_DOCKERHUB_USER --password-stdin """
+                                    echo "======= Pulling docker image ========"
+                                    sh "docker build -t ${R_IMAGE_FULL_NAME} ./rocky"
+                                    sh "docker run --rm \
+                                        -e BUILD_NUMBER=\"$BUILD_NUMBER\" \
+                                        -v /mnt/artifacts:/artifacts \
+                                        ${R_IMAGE_FULL_NAME}"
                                 }
                             }
                         }
                     }
-                }
-                post {
-                    always{
-                        sh "docker rmi -f ${R_IMAGE_FULL_NAME}"
+                    post {
+                        always {
+                            sh "docker rmi -f ${R_IMAGE_FULL_NAME}"
+                        }
                     }
-                }
-            }
+                } // End of Rocky stage
 
                 stage('Build & Test buntu 24.04') {
                     agent { label 'ubuntu24.04' }
@@ -92,45 +91,41 @@ pipeline {
                                     passwordVariable: 'PASS',
                                     usernameVariable: 'USERNAME'
                                 )]) {
-                                    sh '''
-                                        echo $PASS | docker login -u $USERNAME --password-stdin
-                                        echo "======= Pulling docker image ========"
-                                        docker build -t ${U_IMAGE_FULL_NAME} ./ubuntu
-                                        docker run --rm \
+                                    sh """ echo $PASS | docker login -u $USERNAME --password-stdin """
+                                    echo "======= Pulling docker image ========"
+                                    sh "docker build -t ${U_IMAGE_FULL_NAME} ./ubuntu"
+                                    sh "docker run --rm \
                                         -e BUILD_NUMBER=\"$BUILD_NUMBER\" \
                                         -v /mnt/artifacts:/artifacts \
-                                        ${U_IMAGE_FULL_NAME}
-                                    '''
+                                        ${U_IMAGE_FULL_NAME}"
                                 }
                             }
                         }
-                    } // Closed stages here properly
+                    }
                     post {
                         always {
                             sh "docker rmi -f ${U_IMAGE_FULL_NAME}"
                         }
                     }
-                }
+                } // End of Ubuntu stage
+
             }
-        } // Closed 'Build and Test' stages properly
+        } // End of 'Build and Test' stage
 
         stage('Archive Artifacts') {
             agent { label 'linux' }
             steps {
                 sh '''
                     echo "=== Preparing Jenkins Artifacts ==="
-
                     mkdir -p artifacts
-
                     cp -v /mnt/artifacts/build_$BUILD_NUMBER/* artifacts/
-
                     echo "=== Artifacts to Archive ==="
                     ls -lh artifacts/
                 '''
                 archiveArtifacts artifacts: 'artifacts/*', fingerprint: true
             }
         }
-    }
+    } // End of main stages block
 
     post {
         success {
