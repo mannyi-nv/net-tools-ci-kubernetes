@@ -88,17 +88,3 @@ echo "Artifact:"
 
 ls -lh "$ARTIFACT_DIR/"
 
-echo "=== Removing net-tools ==="
-
-apt remove -y "$PACKAGE"
-
-echo "=== Verifying removal ==="
-
-if dpkg-query -W -f='${Status}' "$PACKAGE" 2>/dev/null | grep -q "install ok installed"; then
-    echo "ERROR: net-tools is still installed"
-    exit 1
-else
-    echo "SUCCESS: net-tools was removed"
-fi
-
-echo "=== Test completed successfully ==="

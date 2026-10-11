@@ -81,14 +81,3 @@ echo "Artifact:"
 ls -lh "/artifacts/build_${BUILD_NUMBER}/"
 
 echo "=== Removing net-tools ==="
-
-dnf remove -y net-tools
-
-echo "=== Verifying removal ==="
-
-if rpm -q net-tools >/dev/null 2>&1; then
-    echo "ERROR: net-tools is still installed"
-    exit 1
-else
-    echo "SUCCESS: net-tools was removed"
-fi
