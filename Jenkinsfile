@@ -47,7 +47,7 @@ pipeline {
                                                 usernameVariable: 'ITAY_DOCKERHUB_USER')]) {
                                         sh """ echo $ITAY_DOCKERHUB_PASS | docker login -u $ITAY_DOCKERHUB_USER --password-stdin """
                                         echo "======= Pulling docker image ========" 
-                                        docker build -t $R_IMAGE_FULL_NAME ./rocky
+                                        sh "docker build -t ${R_IMAGE_FULL_NAME} ./rocky"
                                         sh "docker run --rm \
                                             -e BUILD_NUMBER=\"$BUILD_NUMBER\" \
                                             -v /mnt/artifacts:/artifacts \
@@ -64,7 +64,7 @@ pipeline {
                 }
             }
 
-                stage('Test buntu 24.04') {
+                stage('Build & Test buntu 24.04') {
                     agent { label 'ubuntu24.04' }
 
                     stages {
