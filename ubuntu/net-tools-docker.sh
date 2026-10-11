@@ -2,18 +2,6 @@
 
 set -e
 
-apt-get update && \
-apt-get install -y \
-        build-essential \
-        devscripts \
-        debhelper \
-        dpkg-dev \
-        wget \
-        fakeroot && \
-        sed -i 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources && \
-        apt-get update && \
-rm -rf /var/lib/apt/lists/*
-
 PACKAGE="net-tools"
 
 echo "=== Updating APT package information ==="
@@ -87,4 +75,3 @@ echo "$ARTIFACT_DIR/$(basename "$DEB")"
 echo "Artifact:"
 
 ls -lh "$ARTIFACT_DIR/"
-

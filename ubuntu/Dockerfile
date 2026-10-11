@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM mannydevops/ubuntu24.04-net-tools-ci:V1.0
 
 ENV DEBIAN_FRONTEND=noninteractive
 
