@@ -56,7 +56,7 @@ pipeline {
                     }
                 }
 
-                stage('Ubuntu 24.04') {
+                stage('Test buntu 24.04') {
                     agent { label 'ubuntu24.04' }
 
                     stages {
@@ -82,15 +82,20 @@ pipeline {
                             }
                         }
 
-                        stage('Test') {
+                        stage('build') {
                             steps {
-                                sh '''
-                                    docker build -t ${U_IMAGE_FULL_NAME} ./ubuntu
-                                    docker run --rm \
-                                        -e BUILD_NUMBER="$BUILD_NUMBER" \
-                                        -v /mnt/artifacts:/artifacts \
-                                        ${U_IMAGE_FULL_NAME}
-                                '''
+                                withCredentials([usernamePassword
+                                                (credentialsId: 'dockerhub-creds',
+                                                passwordVariable: 'PASS',
+                                                usernameVariable: 'USERNAME')]) {
+                                sh """ echo $PASS | docker login -u $USERNAME --password-stdin """
+                                echo "======= Pulling docker image ========"                                    
+                                sh "docker build -t ${U_IMAGE_FULL_NAME} ./ubuntu"
+                                sh "docker run --rm \
+                                -e BUILD_NUMBER=\"$BUILD_NUMBER\" \
+                                -v /mnt/artifacts:/artifacts \
+                                ${U_IMAGE_FULL_NAME}"
+                               
                             }
                         }
                     }
@@ -132,5 +137,3 @@ pipeline {
         }
     }
 }
-
-# TESTING
