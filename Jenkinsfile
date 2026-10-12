@@ -6,8 +6,6 @@ pipeline {
         IMG_TAG = "${BUILD_NUMBER}"
         R_IMAGE_FULL_NAME = "${R_IMG_NAME}:v0.${IMG_TAG}"
         U_IMAGE_FULL_NAME = "${U_IMG_NAME}:v0.${IMG_TAG}"
-        ITAY_DOCKERHUB_PASS = "dckr_pat_kTSQXKzjM4r2WshQv6Rp95EwFtM" // Note: It is safer to store tokens in credentials instead of hardcoding
-        ITAY_DOCKERHUB_USER = "itaylevops"
     }
     stages {
         stage('Build and Test') {
@@ -30,6 +28,7 @@ pipeline {
                                     echo "WORKSPACE=$WORKSPACE"
                                     echo "BUILD_NUMBER=$BUILD_NUMBER"
                                     echo "JOB_NAME=$JOB_NAME"
+                                    echo "IMAGE_FULL_NAME=$R_IMAGE_FULL_NAME"
 
                                     echo "=== scm Files Varification ==="
                                     ls -l
@@ -39,11 +38,11 @@ pipeline {
                         stage('Build') {
                             steps {
                                 withCredentials([usernamePassword(
-                                    credentialsId: 'net-tools-ci-dev-3',
-                                    passwordVariable: 'ITAY_DOCKERHUB_PASS',
-                                    usernameVariable: 'ITAY_DOCKERHUB_USER'
+                                    credentialsId: 'Dockerhub-cred',
+                                    passwordVariable: 'PASS',
+                                    usernameVariable: 'USERNAME'
                                 )]) {
-                                    sh """ echo $ITAY_DOCKERHUB_PASS | docker login -u $ITAY_DOCKERHUB_USER --password-stdin """
+                                    sh """ echo $PASS | docker login -u $USERNAME --password-stdin """
                                     echo "======= Pulling docker image ========"
                                     sh "docker build -t ${R_IMAGE_FULL_NAME} ./rocky"
                                     sh "docker run --rm \
@@ -59,7 +58,7 @@ pipeline {
                             sh "docker rmi -f ${R_IMAGE_FULL_NAME}"
                         }
                     }
-                } // End of Rocky stage
+                }
 
                 stage('Build & Test buntu 24.04') {
                     agent { label 'ubuntu24.04' }
@@ -107,10 +106,10 @@ pipeline {
                             sh "docker rmi -f ${U_IMAGE_FULL_NAME}"
                         }
                     }
-                } // End of Ubuntu stage
+                }
 
             }
-        } // End of 'Build and Test' stage
+        }
 
         stage('Archive Artifacts') {
             agent { label 'linux' }
@@ -125,7 +124,7 @@ pipeline {
                 archiveArtifacts artifacts: 'artifacts/*', fingerprint: true
             }
         }
-    } // End of main stages block
+    }
 
     post {
         success {

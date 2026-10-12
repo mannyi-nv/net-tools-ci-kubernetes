@@ -1,4 +1,4 @@
-FROM rockylinux:9
+FROM itaylevops/rocky9-net-tools-ci:V1.0
 
 WORKDIR /build
 
