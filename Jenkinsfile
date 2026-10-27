@@ -20,7 +20,7 @@ spec:
     imagePullPolicy: Never
     command:
         - sleep
-    arguments:
+    args:
         - infinity
 '''
                         }
@@ -51,7 +51,7 @@ spec:
     imagePullPolicy: Never
     command:
         - sleep
-    arguments:
+    args:
         - infinity
 '''
                         }
