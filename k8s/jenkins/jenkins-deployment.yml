@@ -13,11 +13,31 @@ spec:
       labels:
         app: jenkins
     spec:
+      serviceAccountName: jenkins
       securityContext:
         fsGroup: 1000
+      initContainers:
+      - name: install-plugins
+        image: jenkins/jenkins:lts-jdk17
+        command:
+        - jenkins-plugin-cli
+        args:
+        - --plugins
+        - kubernetes
+        - configuration-as-code
+        - workflow-aggregator
+        - git
+        - --plugin-download-directory
+        - /var/jenkins_home/plugins
+        volumeMounts:
+        - name: jenkins-store
+          mountPath: /var/jenkins_home
       containers:
       - name: jenkins
         image: jenkins/jenkins:lts-jdk17
+        env:
+        - name: CASC_JENKINS_CONFIG
+          value: /var/jenkins_config/jenkins.yaml
         ports:
         - containerPort: 8080
           name: web
@@ -26,10 +46,16 @@ spec:
         volumeMounts:
         - name: jenkins-store
           mountPath: /var/jenkins_home
+        - name: jenkins-config
+          mountPath: /var/jenkins_config
+          readOnly: true
       volumes:
       - name: jenkins-store
         persistentVolumeClaim:
           claimName: jenkins-pvc
+      - name: jenkins-config
+        configMap:
+          name: jenkins-config
 ---
 apiVersion: v1
 kind: Service

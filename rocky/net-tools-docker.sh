@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+: "${WORKSPACE:?WORKSPACE must be set by Jenkins}"
 
 SRPM="net-tools-2.0-0.64.20160912git.el9.src.rpm"
 URL="https://dl.rockylinux.org/pub/rocky/9.8/BaseOS/source/tree/Packages/n/$SRPM"
@@ -32,7 +33,7 @@ ifconfig
 echo "=== ifconfig test successful ==="
 
 echo "=== Copying RPM artifact ==="
-ARTIFACT_DIR="/artifacts/build_${BUILD_NUMBER}"
+ARTIFACT_DIR="${WORKSPACE}/artifacts/rocky"
 mkdir -p "$ARTIFACT_DIR"
 cp "$RPM" "$ARTIFACT_DIR/"
 
@@ -40,4 +41,4 @@ echo "Artifact copied to:"
 echo "$ARTIFACT_DIR/$(basename "$RPM")"
 
 echo "Artifact:"
-ls -lh "/artifacts/build_${BUILD_NUMBER}/"
+ls -lh "$ARTIFACT_DIR/"

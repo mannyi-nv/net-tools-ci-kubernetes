@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+: "${WORKSPACE:?WORKSPACE must be set by Jenkins}"
 
 PACKAGE="net-tools"
 
@@ -62,7 +63,7 @@ fi
 
 echo "=== Copying DEB artifact ==="
 
-ARTIFACT_DIR="/artifacts/build_${BUILD_NUMBER}"
+ARTIFACT_DIR="${WORKSPACE}/artifacts/ubuntu"
 
 mkdir -p "$ARTIFACT_DIR"
 
