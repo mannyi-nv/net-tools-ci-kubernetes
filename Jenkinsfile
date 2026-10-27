@@ -19,16 +19,17 @@ spec:
     image: net-tools-rocky:local
     imagePullPolicy: Never
     command:
-    - cat
-    tty: true
+        - sleep
+    arguments:
+        - infinity
 '''
                         }
                     }
                     steps {
                         checkout scm
                         sh '''
-                            echo "Building on on-demand Kubernetes agent: $NODE_NAME"
-                            ./rocky/net-tools-docker.sh
+                            echo "Building using on-demand Kubernetes agent: $NODE_NAME"
+                            ./rocky/net-tools-build.sh
                         '''
                         archiveArtifacts artifacts: 'artifacts/rocky/*.rpm', fingerprint: true
                     }
@@ -49,16 +50,17 @@ spec:
     image: net-tools-ubuntu:local
     imagePullPolicy: Never
     command:
-    - cat
-    tty: true
+        - sleep
+    arguments:
+        - infinity
 '''
                         }
                     }
                     steps {
                         checkout scm
                         sh '''
-                            echo "Building on on-demand Kubernetes agent: $NODE_NAME"
-                            ./ubuntu/net-tools-docker.sh
+                            echo "Building using on-demand Kubernetes agent: $NODE_NAME"
+                            ./ubuntu/net-tools-build.sh
                         '''
                         archiveArtifacts artifacts: 'artifacts/ubuntu/*.deb', fingerprint: true
                     }
