@@ -27,6 +27,8 @@ spec:
         - configuration-as-code
         - workflow-aggregator
         - git
+        - github
+        - credentials-binding
         - --plugin-download-directory
         - /var/jenkins_home/plugins
         volumeMounts:

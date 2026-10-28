@@ -14,6 +14,5 @@ RUN dnf install -y \
 COPY net-tools-build.sh .
 RUN chmod +x net-tools-build.sh
 
-CMD ["./net-tools-build.sh']
-
+CMD ["./net-tools-build.sh"]
 

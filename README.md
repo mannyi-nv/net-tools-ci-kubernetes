@@ -1,9 +1,9 @@
 # Net-tools CI on Minikube
 
-Jenkins runs the Rocky and Ubuntu build/test stages concurrently in temporary
-Kubernetes agent pods. The Rocky and Ubuntu images are built into Minikube
-before a job runs; the pipeline does not need Docker on Jenkins or its agents.
-RPM and DEB artifacts are archived by Jenkins from each agent workspace.
+Jenkins builds and pushes versioned Rocky and Ubuntu agent images to Docker Hub,
+then runs the build/test stages concurrently in temporary Kubernetes pods using
+those images. RPM and DEB artifacts are archived by Jenkins from each agent
+workspace.
 
 ## Prerequisites
 
@@ -20,19 +20,26 @@ RPM and DEB artifacts are archived by Jenkins from each agent workspace.
   minikube ssh -- "sudo mkdir -p /mnt/data/jenkins-home && sudo chown 1000:1000 /mnt/data/jenkins-home"
   ```
 
-## Build the local agent images
+## Build and publish the agent images from Jenkins
 
-Run these commands from the repository root whenever either Dockerfile or its
-build script changes:
+The Jenkins pipeline builds both agent images and pushes them to Docker Hub
+with the Jenkins build number as the tag. It then uses those exact tags for
+the on-demand Rocky and Ubuntu agent pods.
 
-```sh
-minikube image build -t net-tools-rocky:local ./rocky
-minikube image build -t net-tools-ubuntu:local ./ubuntu
-```
+Before running the pipeline:
 
-The images use the Rocky and Ubuntu base images in their respective Dockerfiles.
-If the base images require registry authentication, authenticate the image
-builder before building them.
+- Add a Jenkins **Username with password** credential with ID
+  `dockerhub-creds`. Use your Docker Hub username and an access token as the
+  password.
+- Ensure the Jenkins Kubernetes cloud permits privileged pods: the image
+  build stage runs Docker-in-Docker in a privileged sidecar.
+- Ensure the resulting Docker Hub repositories are public, or configure
+  Kubernetes image-pull credentials in the `jenkins` namespace for private
+  repositories.
+
+The pushed tags are `mannydevops/rocky9-net-tools-ci:<BUILD_NUMBER>` and
+`mannydevops/ubuntu24.04-net-tools-ci:<BUILD_NUMBER>`. The Dockerfiles still
+use their existing `V1.0` images as base images.
 
 ## Deploy Jenkins
 
@@ -47,8 +54,9 @@ kubectl apply -f k8s/jenkins/jenkins-deployment.yml
 ```
 
 The Jenkins deployment installs the Kubernetes, Configuration as Code, Pipeline,
-and Git plugins at startup. The Jenkins Kubernetes cloud is configured to create
-agents in the `jenkins` namespace, using the controller's service account.
+Git, and Credentials Binding plugins at startup. The Jenkins Kubernetes cloud
+is configured to create agents in the `jenkins` namespace, using the controller's
+service account.
 
 Wait for Jenkins to become ready and open its NodePort service:
 
