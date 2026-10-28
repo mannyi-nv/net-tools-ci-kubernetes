@@ -59,7 +59,7 @@ spec:
                         sh '''
                             set -eu
                             docker build --pull \
-                                --tag "mannydevops/rocky9-net-tools-ci:${BUILD_NUMBER}" \
+                                --tag "mannydevops/rocky9-net-tools-ci:V.0.${BUILD_NUMBER}" \
                                 ./rocky
                             
                             docker build --pull \
@@ -82,7 +82,7 @@ spec:
                                     --username "$DOCKERHUB_USERNAME" \
                                     --password-stdin
 
-                                docker push "mannydevops/rocky9-net-tools-ci:${BUILD_NUMBER}"
+                                docker push "mannydevops/rocky9-net-tools-ci:V.0.${BUILD_NUMBER}"
                                 docker push "mannydevops/ubuntu24.04-net-tools-ci:V.0.${BUILD_NUMBER}"
                             '''
                         }
