@@ -2,6 +2,7 @@ pipeline {
     agent none
 
     stages {
+        // Outer wrapper stage to provision the K8s Docker-in-Docker agent once
         stage('Build and Push Agent Images') {
             agent {
                 kubernetes {
@@ -36,44 +37,63 @@ spec:
 '''
                 }
             }
-            steps {
-                checkout scm
-                timeout(time: 2, unit: 'MINUTES') {
-                    sh '''
-                        until docker info >/dev/null 2>&1; do
-                            echo "Waiting for Docker-in-Docker daemon..."
-                            sleep 2
-                        done
-                    '''
+            
+            // Nested stages block to separate the pipeline visualization and steps
+            stages {
+                stage('Initialize Daemon & Checkout') {
+                    steps {
+                        checkout scm
+                        timeout(time: 2, unit: 'MINUTES') {
+                            sh '''
+                                until docker info >/dev/null 2>&1; do
+                                    echo "Waiting for Docker-in-Docker daemon..."
+                                    sleep 2
+                                  done
+                            '''
+                        }
+                    }
                 }
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKERHUB_USERNAME',
-                    passwordVariable: 'DOCKERHUB_TOKEN'
-                )]) {
-                    sh '''
-                        set -eu
-                        echo "$DOCKERHUB_TOKEN" | docker login \
-                            --username "$DOCKERHUB_USERNAME" \
-                            --password-stdin
 
-                        docker build --pull \
-                            --tag "mannydevops/rocky9-net-tools-ci:${BUILD_NUMBER}" \
-                            ./rocky
-                        docker push "mannydevops/rocky9-net-tools-ci:${BUILD_NUMBER}"
+                stage('Docker Build') {
+                    steps {
+                        sh '''
+                            set -eu
+                            docker build --pull \
+                                --tag "mannydevops/rocky9-net-tools-ci:${BUILD_NUMBER}" \
+                                ./rocky
+                            
+                            docker build --pull \
+                                --tag "mannydevops/ubuntu24.04-net-tools-ci:V.0.${BUILD_NUMBER}" \
+                                ./ubuntu
+                        '''
+                    }
+                }
 
-                        docker build --pull \
-                            --tag "mannydevops/ubuntu24.04-net-tools-ci:${BUILD_NUMBER}" \
-                            ./ubuntu
-                        docker push "mannydevops/ubuntu24.04-net-tools-ci:${BUILD_NUMBER}"
-                    '''
+                stage('Docker Push') {
+                    steps {
+                        withCredentials([usernamePassword(
+                            credentialsId: 'dockerhub-creds',
+                            usernameVariable: 'DOCKERHUB_USERNAME',
+                            passwordVariable: 'DOCKERHUB_TOKEN'
+                        )]) {
+                            sh '''
+                                set -eu
+                                echo "$DOCKERHUB_TOKEN" | docker login \
+                                    --username "$DOCKERHUB_USERNAME" \
+                                    --password-stdin
+
+                                docker push "mannydevops/rocky9-net-tools-ci:${BUILD_NUMBER}"
+                                docker push "mannydevops/ubuntu24.04-net-tools-ci:V.0.${BUILD_NUMBER}"
+                            '''
+                        }
+                    }
                 }
             }
         }
 
         stage('Build and Test') {
             parallel {
-                stage('Build & Test Rocky 9.8') {
+                stage('Test Rocky 9.8') {
                     agent {
                         kubernetes {
                             cloud 'minikube'
@@ -85,7 +105,7 @@ spec:
   automountServiceAccountToken: false
   containers:
   - name: rocky
-    image: mannydevops/rocky9-net-tools-ci:${env.BUILD_NUMBER}
+    image: mannydevops/rocky9-net-tools-ci:V.0.${env.BUILD_NUMBER}
     imagePullPolicy: Always
     command:
         - sleep
@@ -104,7 +124,7 @@ spec:
                     }
                 }
 
-                stage('Build & Test Ubuntu 24.04') {
+                stage('Test Ubuntu 24.04') {
                     agent {
                         kubernetes {
                             cloud 'minikube'
@@ -116,7 +136,7 @@ spec:
   automountServiceAccountToken: false
   containers:
   - name: ubuntu
-    image: mannydevops/ubuntu24.04-net-tools-ci:${env.BUILD_NUMBER}
+    image: mannydevops/ubuntu24.04-net-tools-ci:V.0.${env.BUILD_NUMBER}
     imagePullPolicy: Always
     command:
         - sleep
