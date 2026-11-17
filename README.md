@@ -1,5 +1,27 @@
 # Net-tools CI on Minikube
 
+## Overview & Motivation
+
+The goal of this process is to create a container with the `ifconfig` command available for old QA and R&D testing. 
+
+To avoid maintaining a Jenkins node, this pipeline uses an agentless architecture. Jenkins builds and pushes versioned Rocky and Ubuntu agent images to Docker Hub, then runs the build and test stages concurrently in ephemeral, on-demand Kubernetes pods.
+
+## Prerequisites
+
+- Minikube and `kubectl` installed.
+- A Minikube cluster and the existing Jenkins PV host path available in Minikube.
+
+## Build and Publish the Agent Images from Jenkins
+
+The Jenkins pipeline builds both agent images and pushes them to Docker Hub using an agentless pod approach.
+
+## Deploy Jenkins
+
+Apply the Kubernetes manifests for Jenkins and configure your Pipeline job pointing to this repository.
+
+
+# Net-tools CI on Minikube
+
 Jenkins builds and pushes versioned Rocky and Ubuntu agent images to Docker Hub,
 then runs the build/test stages concurrently in temporary Kubernetes pods using
 those images. RPM and DEB artifacts are archived by Jenkins from each agent

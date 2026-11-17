@@ -56,7 +56,7 @@ spec:
 
                 stage('Docker Build') {
                     steps {
-                        sh '''
+                        sh """
                             set -eu
                             docker build --pull \
                                 --tag "mannydevops/rocky9-net-tools-ci:V.0.${BUILD_NUMBER}" \
@@ -65,7 +65,7 @@ spec:
                             docker build --pull \
                                 --tag "mannydevops/ubuntu24.04-net-tools-ci:V.0.${BUILD_NUMBER}" \
                                 ./ubuntu
-                        '''
+                        """
                     }
                 }
 
@@ -76,7 +76,7 @@ spec:
                             usernameVariable: 'DOCKERHUB_USERNAME',
                             passwordVariable: 'DOCKERHUB_TOKEN'
                         )]) {
-                            sh '''
+                            sh """
                                 set -eu
                                 echo "$DOCKERHUB_TOKEN" | docker login \
                                     --username "$DOCKERHUB_USERNAME" \
@@ -84,7 +84,7 @@ spec:
 
                                 docker push "mannydevops/rocky9-net-tools-ci:V.0.${BUILD_NUMBER}"
                                 docker push "mannydevops/ubuntu24.04-net-tools-ci:V.0.${BUILD_NUMBER}"
-                            '''
+                            """
                         }
                     }
                 }
